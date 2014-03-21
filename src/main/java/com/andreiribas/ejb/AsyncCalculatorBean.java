@@ -27,56 +27,47 @@ THE SOFTWARE.
  */
 package com.andreiribas.ejb;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
+import javax.ejb.AsyncResult;
+import javax.ejb.Asynchronous;
+import javax.ejb.Stateless;
 
 import org.apache.log4j.Logger;
 
 /**
  * @author Andrei Gonçalves Ribas <andrei.g.ribas@gmail.com>
- *
+ * 
  */
-@Singleton
-@Startup
-public class Main {
-	
+@Stateless(name="asyncCalculator")
+public class AsyncCalculatorBean implements AsyncCalculator {
+
 	private Logger LOGGER;
 	
-	@EJB(name="asyncCalculator")
-	private AsyncCalculator asyncCalculatorBean;
-	
 	@PostConstruct
-	public void start() {
-		
-		this.LOGGER = Logger.getLogger(Main.class);
-	
-		LOGGER.debug("Calling Async method on AsyncCalculator bean.");
-		
-		Future<Double> asyncCalcResult = asyncCalculatorBean.calc();
-		
-		LOGGER.debug("Async method on AsyncCalculator bean returned. Now Future.get() method will be called on the Future object.");
-		
-		Double calcResult = null;
-		
-		try {
-			
-			calcResult = asyncCalcResult.get();
-			
-			LOGGER.debug(String.format("Finished calling Future.get() method on future object, and the result is %s.", calcResult));
-			
-		} catch (InterruptedException e) {
-			LOGGER.debug("Called Future.get() method and got InterruptedException!");
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			LOGGER.debug("Called Future.get() method and got ExecutionException!");
-			e.printStackTrace();
-		}
-		
+	public void setUp() {
+		this.LOGGER = Logger.getLogger(AsyncCalculatorBean.class);
 	}
 	
+	@Override
+	@Asynchronous
+	public Future<Double> calc() {
+		
+		LOGGER.debug("Starting async method.");
+		
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException ex) {
+			ex.printStackTrace();
+		}
+		
+		AsyncResult<Double> calcResult = new AsyncResult<Double>(new Double("2.001"));
+		
+		LOGGER.debug("Finished async method.");
+		
+		return calcResult;
+		
+	}
+
 }
